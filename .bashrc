@@ -11,13 +11,18 @@ source /usr/share/doc/pkgfile/command-not-found.bash
 # Autojump
 [[ -s /home/jared/.autojump/etc/profile.d/autojump.sh ]] && source /home/jared/.autojump/etc/profile.d/autojump.sh
 
+# Vim
+vLessLoc="$(find /usr/share/vim/ -name less.sh | sort -r | head -1)"
+if [ $vLessLoc ]; then
+    alias less="$vLessLoc"
+fi
+
 # ENV
 export PATH=$PATH:~/bin
 export EDITOR="vim"
 export VISUAL="vim"
 
 alias pacman='sudo pacman'
-alias less='/usr/share/vim/vim74/macros/less.sh'
 alias ls='ls --color=auto'
 alias update='pacaur -Syu --noedit'
 alias detach='tmux detach-client'
@@ -25,6 +30,7 @@ eval $(thefuck --alias)
 
 #Dotfile stuff
 alias config='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
+complete -o bashdefault -o default -o nospace -F __git_wrap__git_main config
 # Default PS1
 # PS1='[\u@\h \W]\$ '
 
