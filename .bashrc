@@ -4,7 +4,8 @@
 
 # If not running interactively, don't do anything
 [[ $- != *i* ]] && return
-
+# Path
+export PATH="$PATH:$HOME/.local/bin"
 #Command Not Found
 source /usr/share/doc/pkgfile/command-not-found.bash
 
