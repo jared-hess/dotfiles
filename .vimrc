@@ -36,6 +36,8 @@ set t_Co=256
 " Clipper setting
 " Bind <leader>y to forward last-yanked text to Clipper
 nnoremap <leader>y :call system('ncat localhost 8377', @0)<CR>
+nmap yy yy:call system('ncat localhost 8377', @0)<CR>
+vmap y y:call system('ncat localhost 8377', @0)<CR>
 
 " Mouse mode
 set mouse=a
