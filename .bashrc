@@ -7,7 +7,7 @@
 # Path
 export PATH="$PATH:$HOME/.local/bin"
 #Command Not Found
-source /usr/share/doc/pkgfile/command-not-found.bash
+[[ -s /usr/share/doc/pkgfile/command-not-found.bash ]] && source /usr/share/doc/pkgfile/command-not-found.bash
 
 # Autojump
 [[ -s /home/jared/.autojump/etc/profile.d/autojump.sh ]] && source /home/jared/.autojump/etc/profile.d/autojump.sh
