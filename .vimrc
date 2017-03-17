@@ -10,9 +10,12 @@ set smartcase
 set background=dark
 colorscheme solarized
 
-" Undofile
-set undofile
-set undodir=~/.vim_undo
+" Set undofile if it is supported. Create dirs if they don't exist.
+if has('persistent_undo')
+  set undodir=~/.vim_undo
+  call system('mkdir -p ' . &undodir)
+  set undofile
+endif
 
 " Tab stuff
 set expandtab
@@ -36,13 +39,18 @@ set t_Co=256
 " Clipper setting
 " Bind <leader>y to forward last-yanked text to Clipper
 nnoremap <leader>y :call system('ncat localhost 8377', @0)<CR>
+" Re-bind yy and y to do default action, plus forward to clipper. We'll see if
+" this breaks anything...
 nmap yy yy:call system('ncat localhost 8377', @0)<CR>
 vmap y y:call system('ncat localhost 8377', @0)<CR>
 
 " Mouse mode
 set mouse=a
+
+" https://xkcd.com/1806/
 map <C-ScrollWheelUp> u
 map <C-ScrollWheelDown> <C-R>
+
 " Nerdtree on open
 autocmd StdinReadPre * let s:std_in=1
 autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
