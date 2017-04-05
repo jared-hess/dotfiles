@@ -27,7 +27,11 @@ alias pacman='sudo pacman'
 alias ls='ls --color=auto'
 alias update='pacaur -Syu --noedit'
 alias detach='tmux detach-client'
-eval $(thefuck --alias)
+
+# TheFuck
+if type thefuck &>/dev/null; then
+  eval $(thefuck --alias)
+fi
 
 #Dotfile stuff
 alias config='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
