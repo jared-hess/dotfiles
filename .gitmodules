@@ -25,3 +25,6 @@
 [submodule ".vim/bundle/undotree"]
 	path = .vim/bundle/undotree
 	url = git@github.com:mbbill/undotree.git
+[submodule ".vim/bundle/vim-sleuth"]
+	path = .vim/bundle/vim-sleuth
+	url = git://github.com/tpope/vim-sleuth.git
