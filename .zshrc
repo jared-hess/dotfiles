@@ -91,3 +91,5 @@ source ./.autojump/share/autojump/autojump.zsh
 source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 
 eval `dircolors ~/.dir_colors`
+
+bindkey -v
