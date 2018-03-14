@@ -1,0 +1,31 @@
+{
+	"segments": {
+		"right": [
+			{
+				"function": "powerline.segments.i3wm.workspaces"
+			},
+			{
+				"function": "powerline.segments.common.net.internal_ip",
+				"args":{
+					"interface":"default_gateway",
+					"ipv":4
+				}
+			},
+			{
+				"function": "powerline.segments.common.wthr.weather",
+				"priority": 50
+			},
+			{
+				"function": "powerline.segments.common.time.date"
+			},
+			{
+				"function": "powerline.segments.common.time.date",
+				"name": "time",
+				"args": {
+					"format": "%H:%M",
+					"istime": true
+				}
+			}
+		]
+	}
+}
