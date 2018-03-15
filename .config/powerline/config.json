@@ -45,8 +45,8 @@
 			}
 		},
 		"wm": {
-			"colorscheme": "default",
-			"theme": "default"
+			"colorscheme": "solarized",
+			"theme": "myi3" 
 		}
 	}
 }
