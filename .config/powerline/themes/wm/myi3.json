@@ -2,9 +2,6 @@
 	"segments": {
 		"right": [
 			{
-				"function": "powerline.segments.i3wm.workspaces"
-			},
-			{
 				"function": "powerline.segments.common.net.internal_ip",
 				"args":{
 					"interface":"default_gateway",
@@ -26,6 +23,21 @@
 					"istime": true
 				}
 			}
+		],
+		"left":[
+			{
+				"type": "segment_list",
+				"function": "powerline.listers.i3wm.workspace_lister",
+				"segments": [
+					{
+					"function": "powerline.segments.i3wm.workspace",
+					"args": {
+						"strip": true
+						}
+					}
+				]
+			}
 		]
+
 	}
 }

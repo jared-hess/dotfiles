@@ -38,6 +38,7 @@
 		"uptime":                     { "fg": "solarized:base1", "bg": "solarized:base03", "attrs": [] },
 		"workspaces":                 { "fg": "solarized:base1", "bg": "solarized:base03", "attrs": [] },
 		"workspace":                 { "fg": "solarized:base1", "bg": "solarized:base03", "attrs": [] },
+		"workspace_lister":                 { "fg": "solarized:base1", "bg": "solarized:base03", "attrs": [] },
 		"w_focused":                 { "fg": "solarized:base3", "bg": "solarized:base03", "attrs": [] },
 		"w_visible":                 { "fg": "solarized:base1", "bg": "solarized:base03", "attrs": [] },
 		"internal_ip":                { "fg": "solarized:base1", "bg": "solarized:base02", "attrs": [] }

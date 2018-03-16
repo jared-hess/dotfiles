@@ -10,7 +10,7 @@
 # Please see https://i3wm.org/docs/userguide.html for a complete reference!
 
 gaps inner 10
-gaps outer 0
+gaps outer 10
 smart_gaps on
 
 set $mod Mod4
@@ -97,9 +97,9 @@ bindsym $mod+a focus parent
 #bindsym $mod+d focus child
 
 # switch to workspace
-bindsym $mod+1 workspace 1
-bindsym $mod+2 workspace 2
-bindsym $mod+3 workspace 3
+bindsym $mod+1 workspace 1: Default
+bindsym $mod+2 workspace 2: 
+bindsym $mod+3 workspace 3: WWW
 bindsym $mod+4 workspace 4
 bindsym $mod+5 workspace 5
 bindsym $mod+6 workspace 6
@@ -164,3 +164,5 @@ exec_always "/usr/bin/touch ~/i3exectest2"
 exec_always $powerline_dir > ~/i3vartest
 exec_always $POWERLINE_DIR > ~/i3vartest2
 exec_always "~/.config/i3/powerline.sh"
+
+exec_always --no-startup-id i3-msg "workspace number 1"
