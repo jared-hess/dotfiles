@@ -86,10 +86,22 @@ fi
 source $ZSH/oh-my-zsh.sh
 
 #Autojump
-source ./.autojump/share/autojump/autojump.zsh
+if [[ -a ./.autojump/share/autojump/autojump.zsh ]]; then
+  source ./.autojump/share/autojump/autojump.zsh
+fi
 
-source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+if [[ -a /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
+  source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+fi
 
-eval `dircolors ~/.dir_colors`
+# Support dircolors on MacOS installed via brew
+if command -v dircolors >/dev/null; then
+  eval `dircolors ~/.dir_colors`
+elif command -v gdircolors >/dev/null; then
+  eval `gdircolors ~/.dir_colors`
+fi
+
+# Dotfiles stuff
+alias config='/usr/bin/git --git-dir=$HOME/.dotfiles/ --work-tree=$HOME'
 
 bindkey -v
