@@ -31,3 +31,6 @@
 [submodule ".vim/bundle/vim-plist"]
 	path = .vim/bundle/vim-plist
 	url = git://github.com/darfink/vim-plist.git
+[submodule ".vim/bundle/typescript-vim"]
+	path = .vim/bundle/typescript-vim
+	url = git@github.com:leafgarland/typescript-vim.git
