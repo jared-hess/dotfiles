@@ -109,3 +109,6 @@ bindkey -v
 
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C /usr/local/bin/mc mc
+
+# ENV
+DEFAULT_USER='jhess'
