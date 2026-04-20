@@ -1,0 +1,10 @@
+# ~/.bash_profile managed by chezmoi
+
+if [[ -f "$HOME/.bashrc" ]]; then
+  source "$HOME/.bashrc"
+fi
+
+for file in "$HOME"/.bash_profile.d/*.bash; do
+  [[ -e "$file" ]] || continue
+  source "$file"
+done

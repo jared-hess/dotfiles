@@ -1,0 +1,16 @@
+isWork: false
+workDotfilesRepo: ""
+workDotfilesPath: ".config/work-dotfiles"
+
+ohMyZshRepo: "https://github.com/ohmyzsh/ohmyzsh.git"
+ohMyZshPath: ".oh-my-zsh"
+zshCustomPath: ".config/oh-my-zsh/custom"
+zshTheme: "agnoster"
+
+zshPlugins:
+  - git
+  - docker
+  - docker-compose
+  - z
+
+workZshPlugins: []

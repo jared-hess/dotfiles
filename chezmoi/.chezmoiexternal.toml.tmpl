@@ -1,0 +1,13 @@
+{{- if and .ohMyZshPath .ohMyZshRepo }}
+[ "{{ .ohMyZshPath }}" ]
+type = "git-repo"
+url = "{{ .ohMyZshRepo }}"
+refreshPeriod = "168h"
+
+{{- end }}
+{{- if and .isWork .workDotfilesRepo }}
+[ "{{ .workDotfilesPath }}" ]
+type = "git-repo"
+url = "{{ .workDotfilesRepo }}"
+refreshPeriod = "24h"
+{{- end }}
