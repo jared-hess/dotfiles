@@ -1,46 +1,48 @@
-# Dotfiles Management
+# Dotfiles
 
-This repo uses a bare git repository (`$HOME/.dotfiles`) with your home directory as the working tree.
+This repo is managed with `chezmoi`.
 
-`install_dotfiles.sh` is now a small management CLI that handles bootstrap, updates, conflict backups, and submodule syncing.
-
-This branch also includes an in-repo chezmoi source tree under `chezmoi/` for migration testing.
-
-## Quick start
+## Bootstrap
 
 ```bash
-./install_dotfiles.sh bootstrap
+brew install chezmoi
+chezmoi init --source "$HOME/repos/dotfiles/chezmoi"
+chezmoi apply -R
 ```
 
-If checkout conflicts are found, the script automatically moves conflicting files to a timestamped backup directory under `~/.dotfiles-backup/` and retries.
+`-R` refreshes externals (for example `~/.oh-my-zsh` and optional work overlays).
 
-## Daily commands
+## Daily usage
 
 ```bash
-./install_dotfiles.sh status
-./install_dotfiles.sh update
-./install_dotfiles.sh submodules
-./install_dotfiles.sh config <git args>
-./install_dotfiles.sh doctor
+chezmoi diff
+chezmoi apply
+chezmoi update
+chezmoi edit ~/.zshrc
 ```
 
-Useful alias:
+## Source layout
 
-```bash
-alias config='git --git-dir=$HOME/.dotfiles --work-tree=$HOME'
+- `chezmoi/` is the active chezmoi source state for this repo.
+- Shell config is modularized with `*.d` patterns:
+  - `~/.bash_profile.d/*.bash`
+  - `~/.bashrc.d/*.bash`
+  - `~/.zshrc.d/*.zsh`
+
+## Private work overlay
+
+Set machine-local data in `~/.config/chezmoi/chezmoi.toml`:
+
+```toml
+[data]
+isWork = true
+workDotfilesRepo = "git@git.company.com:team/dotfiles-private.git"
+workDotfilesPath = ".config/work-dotfiles"
 ```
 
-## Environment overrides
+When enabled, work snippets are sourced from:
 
-Set these if you want to customize paths or repository source:
+- `~/.config/work-dotfiles/bashrc.d/*.bash`
+- `~/.config/work-dotfiles/zshrc.d/*.zsh`
 
-- `DOTFILES_REPO_URL` (default: `git@github.com:jared-hess/dotfiles.git`)
-- `DOTFILES_GIT_DIR` (default: `$HOME/.dotfiles`)
-- `DOTFILES_WORK_TREE` (default: `$HOME`)
-- `DOTFILES_BACKUP_ROOT` (default: `$HOME/.dotfiles-backup`)
-
-Example:
-
-```bash
-DOTFILES_REPO_URL=git@github.com:my-org/dotfiles.git ./install_dotfiles.sh bootstrap
-```
+See `chezmoi/README.md` for the full layout and onboarding details.
