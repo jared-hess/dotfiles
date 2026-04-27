@@ -11,3 +11,10 @@ type = "git-repo"
 url = "{{ .workDotfilesRepo }}"
 refreshPeriod = "24h"
 {{- end }}
+
+{{- if and .opencodeEnabled .opencodeRepo .opencodePath }}
+[ "{{ .opencodePath }}" ]
+type = "git-repo"
+url = "{{ .opencodeRepo }}"
+refreshPeriod = "24h"
+{{- end }}

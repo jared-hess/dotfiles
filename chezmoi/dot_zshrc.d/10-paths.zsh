@@ -1,3 +1,4 @@
-typeset -U path PATH
-path=("$HOME/bin" "$HOME/.local/bin" "/usr/local/bin" $path)
-export PATH
+shared_shell_path="$HOME/.config/shell/path.sh"
+if [[ -f "$shared_shell_path" ]]; then
+  source "$shared_shell_path"
+fi

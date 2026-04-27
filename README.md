@@ -5,20 +5,22 @@ This repo is managed with `chezmoi`.
 ## Bootstrap
 
 ```bash
-brew install chezmoi
-chezmoi init --source "$HOME/repos/dotfiles/chezmoi"
-chezmoi apply -R
+./script/chezmoi bootstrap
 ```
 
-`-R` refreshes externals (for example `~/.oh-my-zsh` and optional work overlays).
+The wrapper prefers package managers (`brew`, `apt`, `pacman`, `dnf`, `zypper`, `apk`) and falls back to the official chezmoi install script. It also runs the official unattended Oh My Zsh install script when `~/.oh-my-zsh` is missing.
+
+Set `RUN_OH_MY_ZSH_INSTALLER=0` to skip running the Oh My Zsh installer.
+
+`apply -R` refreshes externals (for example `~/.oh-my-zsh`, optional work overlays, and optional opencode repos).
 
 ## Daily usage
 
 ```bash
-chezmoi diff
-chezmoi apply
-chezmoi update
-chezmoi edit ~/.zshrc
+./script/chezmoi diff
+./script/chezmoi apply
+./script/chezmoi update
+./script/chezmoi edit ~/.zshrc
 ```
 
 ## Source layout

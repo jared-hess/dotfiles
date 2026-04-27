@@ -44,6 +44,7 @@ opt.timeout = true
 opt.timeoutlen = 3000
 opt.laststatus = 2
 opt.mouse = "a"
+opt.clipboard = "unnamedplus"
 opt.signcolumn = "yes"
 opt.undofile = true
 local undodir = vim.fn.expand("~/.vim_undo")

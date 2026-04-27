@@ -14,3 +14,7 @@ zshPlugins:
   - z
 
 workZshPlugins: []
+
+opencodeEnabled: false
+opencodeRepo: ""
+opencodePath: ".config/opencode"
