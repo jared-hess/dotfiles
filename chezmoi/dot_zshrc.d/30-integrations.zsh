@@ -1,9 +1,3 @@
-if [[ -f "$HOME/.autojump/share/autojump/autojump.zsh" ]]; then
-  source "$HOME/.autojump/share/autojump/autojump.zsh"
-elif [[ -f "$HOME/.autojump/etc/profile.d/autojump.sh" ]]; then
-  source "$HOME/.autojump/etc/profile.d/autojump.sh"
-fi
-
 if [[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]]; then
   source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
 fi

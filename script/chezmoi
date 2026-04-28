@@ -6,8 +6,11 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 CHEZMOI_SOURCE_DIR="${CHEZMOI_SOURCE_DIR:-$REPO_ROOT/chezmoi}"
+CHEZMOI_DESTINATION="${CHEZMOI_DESTINATION:-$HOME}"
 OH_MY_ZSH_DIR="${OH_MY_ZSH_DIR:-$HOME/.oh-my-zsh}"
 RUN_OH_MY_ZSH_INSTALLER="${RUN_OH_MY_ZSH_INSTALLER:-1}"
+BACKUP_EXISTING_DOTFILES="${BACKUP_EXISTING_DOTFILES:-1}"
+CHEZMOI_BACKUP_ROOT="${CHEZMOI_BACKUP_ROOT:-$HOME/.chezmoi-backup}"
 
 log() {
   printf '[chezmoi-wrapper] %s\n' "$*"
@@ -24,6 +27,10 @@ die() {
 
 have_cmd() {
   command -v "$1" >/dev/null 2>&1
+}
+
+chezmoi_cmd() {
+  chezmoi --source "$CHEZMOI_SOURCE_DIR" --destination "$CHEZMOI_DESTINATION" "$@"
 }
 
 as_root() {
@@ -145,6 +152,42 @@ ensure_oh_my_zsh() {
   fi
 }
 
+backup_existing_targets() {
+  if [[ "$BACKUP_EXISTING_DOTFILES" != "1" ]]; then
+    return
+  fi
+
+  local backup_dir="$CHEZMOI_BACKUP_ROOT/$(date +%Y%m%d-%H%M%S)"
+  local rel_path
+  local target_path
+  local backup_path
+  local copied=0
+
+  while IFS= read -r -d '' rel_path; do
+    [[ -n "$rel_path" ]] || continue
+
+    target_path="$CHEZMOI_DESTINATION/$rel_path"
+    if [[ -e "$target_path" || -L "$target_path" ]]; then
+      backup_path="$backup_dir/$rel_path"
+      mkdir -p "$(dirname "$backup_path")"
+
+      if [[ -d "$target_path" && ! -L "$target_path" ]]; then
+        cp -R "$target_path" "$backup_path"
+      else
+        cp -pP "$target_path" "$backup_path"
+      fi
+
+      copied=$((copied + 1))
+    fi
+  done < <(chezmoi_cmd managed --path-style=relative --include=files,symlinks,dirs -0)
+
+  if ((copied > 0)); then
+    log "Backed up $copied existing target(s) to $backup_dir"
+  else
+    log "No existing managed targets needed backup"
+  fi
+}
+
 cmd_bootstrap() {
   ensure_chezmoi
   ensure_oh_my_zsh
@@ -154,23 +197,25 @@ cmd_bootstrap() {
   log "Initializing chezmoi source: $CHEZMOI_SOURCE_DIR"
   chezmoi init --source "$CHEZMOI_SOURCE_DIR"
 
+  backup_existing_targets
+
   log "Applying dotfiles (refreshing externals)"
-  chezmoi apply -R
+  chezmoi_cmd apply -R
 }
 
 cmd_diff() {
   ensure_chezmoi
-  chezmoi diff "$@"
+  chezmoi_cmd diff "$@"
 }
 
 cmd_apply() {
   ensure_chezmoi
-  chezmoi apply -R "$@"
+  chezmoi_cmd apply -R "$@"
 }
 
 cmd_update() {
   ensure_chezmoi
-  chezmoi update "$@"
+  chezmoi_cmd update "$@"
 }
 
 cmd_doctor() {
@@ -179,6 +224,8 @@ cmd_doctor() {
   printf 'chezmoi=%s\n' "$(command -v chezmoi)"
   printf 'chezmoi_version=%s\n' "$(chezmoi --version | head -n 1)"
   printf 'source_dir=%s\n' "$CHEZMOI_SOURCE_DIR"
+  printf 'destination=%s\n' "$CHEZMOI_DESTINATION"
+  printf 'resolved_source=%s\n' "$(chezmoi_cmd source-path)"
   printf 'data_file=%s\n' "$HOME/.config/chezmoi/chezmoi.toml"
 }
 
@@ -198,8 +245,11 @@ Any other command is passed through to chezmoi directly.
 
 Environment:
   CHEZMOI_SOURCE_DIR   Override source directory (default: $REPO_ROOT/chezmoi)
+  CHEZMOI_DESTINATION  Override destination directory (default: $HOME)
   OH_MY_ZSH_DIR        Override oh-my-zsh install directory (default: $HOME/.oh-my-zsh)
   RUN_OH_MY_ZSH_INSTALLER  Set to 0 to skip running the oh-my-zsh install script
+  BACKUP_EXISTING_DOTFILES Set to 0 to skip pre-apply backups during bootstrap
+  CHEZMOI_BACKUP_ROOT  Backup directory root (default: $HOME/.chezmoi-backup)
 EOF
 }
 
@@ -228,7 +278,7 @@ main() {
       ;;
     *)
       ensure_chezmoi
-      chezmoi "$cmd" "$@"
+      chezmoi_cmd "$cmd" "$@"
       ;;
   esac
 }
