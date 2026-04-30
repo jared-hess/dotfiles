@@ -1,0 +1,25 @@
+add_newline = false
+
+format = "$all$character"
+
+[character]
+success_symbol = "[❯](bold green)"
+error_symbol = "[❯](bold red)"
+
+[directory]
+truncate_to_repo = false
+truncation_length = 4
+
+[git_branch]
+symbol = "git:"
+
+[hostname]
+ssh_only = true
+format = "[$ssh_symbol$hostname]($style) "
+style = "bold yellow"
+
+[username]
+show_always = false
+
+[time]
+disabled = true

@@ -9,6 +9,8 @@ CHEZMOI_SOURCE_DIR="${CHEZMOI_SOURCE_DIR:-$REPO_ROOT/chezmoi}"
 CHEZMOI_DESTINATION="${CHEZMOI_DESTINATION:-$HOME}"
 OH_MY_ZSH_DIR="${OH_MY_ZSH_DIR:-$HOME/.oh-my-zsh}"
 RUN_OH_MY_ZSH_INSTALLER="${RUN_OH_MY_ZSH_INSTALLER:-1}"
+RUN_STARSHIP_INSTALLER="${RUN_STARSHIP_INSTALLER:-1}"
+STARSHIP_BIN_DIR="${STARSHIP_BIN_DIR:-$HOME/.local/bin}"
 BACKUP_EXISTING_DOTFILES="${BACKUP_EXISTING_DOTFILES:-1}"
 CHEZMOI_BACKUP_ROOT="${CHEZMOI_BACKUP_ROOT:-$HOME/.chezmoi-backup}"
 
@@ -115,6 +117,76 @@ ensure_chezmoi() {
   have_cmd chezmoi || die "chezmoi install failed"
 }
 
+install_starship_with_package_manager() {
+  if have_cmd brew; then
+    log "Installing starship with Homebrew"
+    brew install starship && return 0
+    warn "Homebrew install failed"
+  fi
+
+  if have_cmd apt-get; then
+    log "Installing starship with apt"
+    as_root apt-get update && as_root apt-get install -y starship && return 0
+    warn "apt install failed"
+  fi
+
+  if have_cmd pacman; then
+    log "Installing starship with pacman"
+    as_root pacman -Sy --noconfirm starship && return 0
+    warn "pacman install failed"
+  fi
+
+  if have_cmd dnf; then
+    log "Installing starship with dnf"
+    as_root dnf install -y starship && return 0
+    warn "dnf install failed"
+  fi
+
+  if have_cmd zypper; then
+    log "Installing starship with zypper"
+    as_root zypper --non-interactive install starship && return 0
+    warn "zypper install failed"
+  fi
+
+  if have_cmd apk; then
+    log "Installing starship with apk"
+    as_root apk add starship && return 0
+    warn "apk install failed"
+  fi
+
+  return 1
+}
+
+install_starship_with_official_script() {
+  mkdir -p "$STARSHIP_BIN_DIR"
+
+  if have_cmd curl; then
+    log "Installing starship with official install script via curl"
+    sh -c "$(curl -fsSL https://starship.rs/install.sh)" -- -y -b "$STARSHIP_BIN_DIR"
+  elif have_cmd wget; then
+    log "Installing starship with official install script via wget"
+    sh -c "$(wget -qO- https://starship.rs/install.sh)" -- -y -b "$STARSHIP_BIN_DIR"
+  else
+    die "Neither curl nor wget is available for starship fallback install"
+  fi
+
+  export PATH="$STARSHIP_BIN_DIR:$PATH"
+}
+
+ensure_starship() {
+  if [[ "$RUN_STARSHIP_INSTALLER" != "1" ]]; then
+    return
+  fi
+
+  if have_cmd starship; then
+    return
+  fi
+
+  install_starship_with_package_manager || install_starship_with_official_script
+
+  have_cmd starship || die "starship install failed"
+}
+
 install_oh_my_zsh_with_official_script() {
   local installer_url="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 
@@ -190,6 +262,7 @@ backup_existing_targets() {
 
 cmd_bootstrap() {
   ensure_chezmoi
+  ensure_starship
   ensure_oh_my_zsh
 
   [[ -d "$CHEZMOI_SOURCE_DIR" ]] || die "Chezmoi source directory not found: $CHEZMOI_SOURCE_DIR"
@@ -223,6 +296,11 @@ cmd_doctor() {
 
   printf 'chezmoi=%s\n' "$(command -v chezmoi)"
   printf 'chezmoi_version=%s\n' "$(chezmoi --version | head -n 1)"
+  if have_cmd starship; then
+    printf 'starship=%s\n' "$(command -v starship)"
+  else
+    printf 'starship=missing\n'
+  fi
   printf 'source_dir=%s\n' "$CHEZMOI_SOURCE_DIR"
   printf 'destination=%s\n' "$CHEZMOI_DESTINATION"
   printf 'resolved_source=%s\n' "$(chezmoi_cmd source-path)"
@@ -248,6 +326,8 @@ Environment:
   CHEZMOI_DESTINATION  Override destination directory (default: $HOME)
   OH_MY_ZSH_DIR        Override oh-my-zsh install directory (default: $HOME/.oh-my-zsh)
   RUN_OH_MY_ZSH_INSTALLER  Set to 0 to skip running the oh-my-zsh install script
+  RUN_STARSHIP_INSTALLER Set to 0 to skip installing starship during bootstrap
+  STARSHIP_BIN_DIR     Starship install directory for fallback script installs
   BACKUP_EXISTING_DOTFILES Set to 0 to skip pre-apply backups during bootstrap
   CHEZMOI_BACKUP_ROOT  Backup directory root (default: $HOME/.chezmoi-backup)
 EOF
