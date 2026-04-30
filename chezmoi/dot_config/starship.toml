@@ -1,25 +1,40 @@
 add_newline = false
 
-format = "$all$character"
-
-[character]
-success_symbol = "[❯](bold green)"
-error_symbol = "[❯](bold red)"
-
-[directory]
-truncate_to_repo = false
-truncation_length = 4
-
-[git_branch]
-symbol = "git:"
-
-[hostname]
-ssh_only = true
-format = "[$ssh_symbol$hostname]($style) "
-style = "bold yellow"
+format = """
+[](#5E81AC)$username$hostname[](fg:#5E81AC bg:#4C566A)$directory[](fg:#4C566A bg:#3B4252)$git_branch$git_status[](fg:#3B4252)$line_break$character
+"""
 
 [username]
 show_always = false
+format = "[ $user ]($style)"
+style_user = "bg:#5E81AC fg:#ECEFF4"
+style_root = "bg:#5E81AC fg:#BF616A"
+
+[hostname]
+ssh_only = true
+format = "[ $hostname ]($style)"
+style = "bg:#5E81AC fg:#ECEFF4"
+
+[directory]
+style = "bg:#4C566A fg:#ECEFF4"
+format = "[ $path ]($style)"
+truncate_to_repo = false
+truncation_length = 4
+truncation_symbol = "…/"
+
+[git_branch]
+symbol = ""
+style = "bg:#3B4252 fg:#A3BE8C"
+format = "[ $symbol $branch ]($style)"
+
+[git_status]
+style = "bg:#3B4252 fg:#EBCB8B"
+format = "[($all_status$ahead_behind )]($style)"
+
+[character]
+success_symbol = "[❯](bold #A3BE8C)"
+error_symbol = "[❯](bold #BF616A)"
+vimcmd_symbol = "[❮](bold #88C0D0)"
 
 [time]
 disabled = true
