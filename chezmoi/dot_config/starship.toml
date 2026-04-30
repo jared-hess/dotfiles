@@ -1,22 +1,22 @@
 add_newline = false
 
 format = """
-[](#5E81AC)$username$hostname[](fg:#5E81AC bg:#4C566A)$directory[](fg:#4C566A bg:#3B4252)$git_branch$git_status[](fg:#3B4252)$line_break$character
+[](#7aa2f7)$username$hostname[](fg:#7aa2f7 bg:#2f3549)$directory[](fg:#2f3549 bg:#24283b)$git_branch$git_status[](fg:#24283b)$line_break$character
 """
 
 [username]
 show_always = false
 format = "[ $user ]($style)"
-style_user = "bg:#5E81AC fg:#ECEFF4"
-style_root = "bg:#5E81AC fg:#BF616A"
+style_user = "bg:#7aa2f7 fg:#1a1b26"
+style_root = "bg:#7aa2f7 fg:#f7768e"
 
 [hostname]
 ssh_only = true
 format = "[ $hostname ]($style)"
-style = "bg:#5E81AC fg:#ECEFF4"
+style = "bg:#7aa2f7 fg:#1a1b26"
 
 [directory]
-style = "bg:#4C566A fg:#ECEFF4"
+style = "bg:#2f3549 fg:#c0caf5"
 format = "[ $path ]($style)"
 truncate_to_repo = false
 truncation_length = 4
@@ -24,17 +24,17 @@ truncation_symbol = "…/"
 
 [git_branch]
 symbol = ""
-style = "bg:#3B4252 fg:#A3BE8C"
+style = "bg:#24283b fg:#9ece6a"
 format = "[ $symbol $branch ]($style)"
 
 [git_status]
-style = "bg:#3B4252 fg:#EBCB8B"
+style = "bg:#24283b fg:#e0af68"
 format = "[($all_status$ahead_behind )]($style)"
 
 [character]
-success_symbol = "[❯](bold #A3BE8C)"
-error_symbol = "[❯](bold #BF616A)"
-vimcmd_symbol = "[❮](bold #88C0D0)"
+success_symbol = "[❯](bold #9ece6a)"
+error_symbol = "[❯](bold #f7768e)"
+vimcmd_symbol = "[❮](bold #7dcfff)"
 
 [time]
 disabled = true
