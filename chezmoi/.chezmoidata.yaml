@@ -11,6 +11,7 @@ zshPlugins:
   - git
   - docker
   - docker-compose
+  - command-not-found
   - z
 
 workZshPlugins: []
