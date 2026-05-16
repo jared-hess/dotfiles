@@ -1,0 +1,9 @@
+work_dotfiles_path="$HOME/{{ .workDotfilesPath }}"
+work_zsh_file="$work_dotfiles_path/zshrc.work"
+if [[ -f "$work_zsh_file" ]]; then
+  source "$work_zsh_file"
+fi
+
+for file in "$work_dotfiles_path"/zshrc.d/*.zsh(.N); do
+  source "$file"
+done

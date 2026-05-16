@@ -1,0 +1,286 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+CHEZMOI_SOURCE_DIR="${CHEZMOI_SOURCE_DIR:-$REPO_ROOT/chezmoi}"
+CHEZMOI_DESTINATION="${CHEZMOI_DESTINATION:-$HOME}"
+OH_MY_ZSH_DIR="${OH_MY_ZSH_DIR:-$HOME/.oh-my-zsh}"
+RUN_OH_MY_ZSH_INSTALLER="${RUN_OH_MY_ZSH_INSTALLER:-1}"
+BACKUP_EXISTING_DOTFILES="${BACKUP_EXISTING_DOTFILES:-1}"
+CHEZMOI_BACKUP_ROOT="${CHEZMOI_BACKUP_ROOT:-$HOME/.chezmoi-backup}"
+
+log() {
+  printf '[chezmoi-wrapper] %s\n' "$*"
+}
+
+warn() {
+  printf '[chezmoi-wrapper] WARN: %s\n' "$*" >&2
+}
+
+die() {
+  printf '[chezmoi-wrapper] ERROR: %s\n' "$*" >&2
+  exit 1
+}
+
+have_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+chezmoi_cmd() {
+  chezmoi --source "$CHEZMOI_SOURCE_DIR" --destination "$CHEZMOI_DESTINATION" "$@"
+}
+
+as_root() {
+  if [[ "$(id -u)" -eq 0 ]]; then
+    "$@"
+    return
+  fi
+
+  if have_cmd sudo; then
+    sudo "$@"
+    return
+  fi
+
+  die "Need root privileges for package install, but sudo was not found"
+}
+
+install_with_package_manager() {
+  if have_cmd brew; then
+    log "Installing chezmoi with Homebrew"
+    brew install chezmoi && return 0
+    warn "Homebrew install failed"
+  fi
+
+  if have_cmd apt-get; then
+    log "Installing chezmoi with apt"
+    as_root apt-get update && as_root apt-get install -y chezmoi && return 0
+    warn "apt install failed"
+  fi
+
+  if have_cmd pacman; then
+    log "Installing chezmoi with pacman"
+    as_root pacman -Sy --noconfirm chezmoi && return 0
+    warn "pacman install failed"
+  fi
+
+  if have_cmd dnf; then
+    log "Installing chezmoi with dnf"
+    as_root dnf install -y chezmoi && return 0
+    warn "dnf install failed"
+  fi
+
+  if have_cmd zypper; then
+    log "Installing chezmoi with zypper"
+    as_root zypper --non-interactive install chezmoi && return 0
+    warn "zypper install failed"
+  fi
+
+  if have_cmd apk; then
+    log "Installing chezmoi with apk"
+    as_root apk add chezmoi && return 0
+    warn "apk install failed"
+  fi
+
+  return 1
+}
+
+install_with_official_script() {
+  local bin_dir="$HOME/.local/bin"
+
+  mkdir -p "$bin_dir"
+
+  if have_cmd curl; then
+    log "Installing chezmoi with official install script via curl"
+    sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$bin_dir"
+  elif have_cmd wget; then
+    log "Installing chezmoi with official install script via wget"
+    sh -c "$(wget -qO- get.chezmoi.io)" -- -b "$bin_dir"
+  else
+    die "Neither curl nor wget is available for fallback install"
+  fi
+
+  export PATH="$bin_dir:$PATH"
+}
+
+ensure_chezmoi() {
+  if have_cmd chezmoi; then
+    return
+  fi
+
+  install_with_package_manager || install_with_official_script
+
+  have_cmd chezmoi || die "chezmoi install failed"
+}
+
+install_oh_my_zsh_with_official_script() {
+  local installer_url="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
+
+  if have_cmd curl; then
+    log "Running Oh My Zsh install script via curl"
+    ZSH="$OH_MY_ZSH_DIR" RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(curl -fsSL "$installer_url")" "" --unattended
+    return 0
+  fi
+
+  if have_cmd wget; then
+    log "Running Oh My Zsh install script via wget"
+    ZSH="$OH_MY_ZSH_DIR" RUNZSH=no CHSH=no KEEP_ZSHRC=yes sh -c "$(wget -qO- "$installer_url")" "" --unattended
+    return 0
+  fi
+
+  return 1
+}
+
+ensure_oh_my_zsh() {
+  if [[ "$RUN_OH_MY_ZSH_INSTALLER" != "1" ]]; then
+    return
+  fi
+
+  if [[ -d "$OH_MY_ZSH_DIR" ]]; then
+    return
+  fi
+
+  if ! have_cmd zsh; then
+    warn "Skipping Oh My Zsh install because zsh is not installed"
+    return
+  fi
+
+  if ! install_oh_my_zsh_with_official_script; then
+    warn "Could not run Oh My Zsh installer (curl/wget missing). Continuing."
+  fi
+}
+
+backup_existing_targets() {
+  if [[ "$BACKUP_EXISTING_DOTFILES" != "1" ]]; then
+    return
+  fi
+
+  local backup_dir="$CHEZMOI_BACKUP_ROOT/$(date +%Y%m%d-%H%M%S)"
+  local rel_path
+  local target_path
+  local backup_path
+  local copied=0
+
+  while IFS= read -r -d '' rel_path; do
+    [[ -n "$rel_path" ]] || continue
+
+    target_path="$CHEZMOI_DESTINATION/$rel_path"
+    if [[ -e "$target_path" || -L "$target_path" ]]; then
+      backup_path="$backup_dir/$rel_path"
+      mkdir -p "$(dirname "$backup_path")"
+
+      if [[ -d "$target_path" && ! -L "$target_path" ]]; then
+        cp -R "$target_path" "$backup_path"
+      else
+        cp -pP "$target_path" "$backup_path"
+      fi
+
+      copied=$((copied + 1))
+    fi
+  done < <(chezmoi_cmd managed --path-style=relative --include=files,symlinks,dirs -0)
+
+  if ((copied > 0)); then
+    log "Backed up $copied existing target(s) to $backup_dir"
+  else
+    log "No existing managed targets needed backup"
+  fi
+}
+
+cmd_bootstrap() {
+  ensure_chezmoi
+  ensure_oh_my_zsh
+
+  [[ -d "$CHEZMOI_SOURCE_DIR" ]] || die "Chezmoi source directory not found: $CHEZMOI_SOURCE_DIR"
+
+  log "Initializing chezmoi source: $CHEZMOI_SOURCE_DIR"
+  chezmoi init --source "$CHEZMOI_SOURCE_DIR"
+
+  backup_existing_targets
+
+  log "Applying dotfiles (refreshing externals)"
+  chezmoi_cmd apply -R
+}
+
+cmd_diff() {
+  ensure_chezmoi
+  chezmoi_cmd diff "$@"
+}
+
+cmd_apply() {
+  ensure_chezmoi
+  chezmoi_cmd apply -R "$@"
+}
+
+cmd_update() {
+  ensure_chezmoi
+  chezmoi_cmd update "$@"
+}
+
+cmd_doctor() {
+  ensure_chezmoi
+
+  printf 'chezmoi=%s\n' "$(command -v chezmoi)"
+  printf 'chezmoi_version=%s\n' "$(chezmoi --version | head -n 1)"
+  printf 'source_dir=%s\n' "$CHEZMOI_SOURCE_DIR"
+  printf 'destination=%s\n' "$CHEZMOI_DESTINATION"
+  printf 'resolved_source=%s\n' "$(chezmoi_cmd source-path)"
+  printf 'data_file=%s\n' "$HOME/.config/chezmoi/chezmoi.toml"
+}
+
+usage() {
+  cat <<EOF
+Usage: script/chezmoi [command] [args...]
+
+Commands:
+  bootstrap    Install chezmoi (prefer package manager), init source, apply -R
+  apply        Run 'chezmoi apply -R'
+  diff         Run 'chezmoi diff'
+  update       Run 'chezmoi update'
+  doctor       Print local chezmoi diagnostics
+  help         Show this help
+
+Any other command is passed through to chezmoi directly.
+
+Environment:
+  CHEZMOI_SOURCE_DIR   Override source directory (default: $REPO_ROOT/chezmoi)
+  CHEZMOI_DESTINATION  Override destination directory (default: $HOME)
+  OH_MY_ZSH_DIR        Override oh-my-zsh install directory (default: $HOME/.oh-my-zsh)
+  RUN_OH_MY_ZSH_INSTALLER  Set to 0 to skip running the oh-my-zsh install script
+  BACKUP_EXISTING_DOTFILES Set to 0 to skip pre-apply backups during bootstrap
+  CHEZMOI_BACKUP_ROOT  Backup directory root (default: $HOME/.chezmoi-backup)
+EOF
+}
+
+main() {
+  local cmd="${1:-bootstrap}"
+  shift || true
+
+  case "$cmd" in
+    bootstrap|install)
+      cmd_bootstrap "$@"
+      ;;
+    apply)
+      cmd_apply "$@"
+      ;;
+    diff)
+      cmd_diff "$@"
+      ;;
+    update)
+      cmd_update "$@"
+      ;;
+    doctor)
+      cmd_doctor "$@"
+      ;;
+    help|-h|--help)
+      usage
+      ;;
+    *)
+      ensure_chezmoi
+      chezmoi_cmd "$cmd" "$@"
+      ;;
+  esac
+}
+
+main "$@"

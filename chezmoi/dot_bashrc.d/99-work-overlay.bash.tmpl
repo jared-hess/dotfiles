@@ -1,0 +1,10 @@
+work_dotfiles_path="$HOME/{{ .workDotfilesPath }}"
+work_bash_file="$work_dotfiles_path/bashrc.work"
+if [[ -f "$work_bash_file" ]]; then
+  source "$work_bash_file"
+fi
+
+for file in "$work_dotfiles_path"/bashrc.d/*.bash; do
+  [[ -e "$file" ]] || continue
+  source "$file"
+done
