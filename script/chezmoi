@@ -283,7 +283,7 @@ cmd_diff() {
 
 cmd_apply() {
   ensure_chezmoi
-  chezmoi_cmd apply -R "$@"
+  chezmoi_cmd apply "$@"
 }
 
 cmd_update() {
@@ -313,7 +313,7 @@ Usage: script/chezmoi [command] [args...]
 
 Commands:
   bootstrap    Install chezmoi (prefer package manager), init source, apply -R
-  apply        Run 'chezmoi apply -R'
+  apply        Run 'chezmoi apply'
   diff         Run 'chezmoi diff'
   update       Run 'chezmoi update'
   doctor       Print local chezmoi diagnostics

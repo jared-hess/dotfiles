@@ -5,6 +5,13 @@ url = "{{ .ohMyZshRepo }}"
 refreshPeriod = "168h"
 
 {{- end }}
+{{- if and .gitWorktreeZshPluginPath .gitWorktreeZshPluginRepo }}
+[ "{{ .gitWorktreeZshPluginPath }}" ]
+type = "git-repo"
+url = "{{ .gitWorktreeZshPluginRepo }}"
+refreshPeriod = "168h"
+
+{{- end }}
 {{- if and .isWork .workDotfilesRepo }}
 [ "{{ .workDotfilesPath }}" ]
 type = "git-repo"

@@ -5,6 +5,8 @@ workDotfilesPath: ".config/work-dotfiles"
 ohMyZshRepo: "https://github.com/ohmyzsh/ohmyzsh.git"
 ohMyZshPath: ".oh-my-zsh"
 zshCustomPath: ".config/oh-my-zsh/custom"
+gitWorktreeZshPluginRepo: "https://github.com/trthomps/git-worktree-zsh-plugin.git"
+gitWorktreeZshPluginPath: ".config/oh-my-zsh/custom/plugins/git-worktree"
 zshTheme: ""
 
 zshPlugins:
@@ -12,6 +14,7 @@ zshPlugins:
   - docker
   - docker-compose
   - command-not-found
+  - git-worktree
   - z
 
 workZshPlugins: []

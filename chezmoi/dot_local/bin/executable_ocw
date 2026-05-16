@@ -1,0 +1,156 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'EOF'
+Usage: ocw [options] <branch-name>
+
+Create or reuse a git worktree for <branch-name>, then launch OpenCode there.
+
+Options:
+  -b, --base-branch <branch> Base branch for new worktrees. Defaults to BASE_BRANCH or the current branch.
+  -r, --worktree-root <dir>  Parent directory for worktrees. Defaults to WORKTREE_ROOT or ~/worktrees/<repo-name>.
+  -h, --help                 Show this help.
+
+Environment:
+  BASE_BRANCH    Fallback base branch when --base-branch is not set.
+  WORKTREE_ROOT  Fallback worktree parent when --worktree-root is not set.
+EOF
+}
+
+die() {
+  printf 'ocw: %s\n' "$*" >&2
+  exit 1
+}
+
+have_cmd() {
+  command -v "$1" >/dev/null 2>&1
+}
+
+is_worktree_for_repo() {
+  local candidate_common candidate_git_dir candidate_root repo_common
+
+  candidate_root="$(git -C "$1" rev-parse --show-toplevel 2>/dev/null)" || return 1
+  [ "$candidate_root" = "$1" ] || return 1
+
+  candidate_common="$(git -C "$1" rev-parse --git-common-dir 2>/dev/null)" || return 1
+  candidate_git_dir="$(git -C "$1" rev-parse --git-dir 2>/dev/null)" || return 1
+  repo_common="$(git -C "$repo_root" rev-parse --git-common-dir 2>/dev/null)" || return 1
+
+  [ "$(cd "$1" && cd "$candidate_git_dir" && pwd -P)" != "$(cd "$1" && cd "$candidate_common" && pwd -P)" ] || return 1
+  [ "$(cd "$1" && cd "$candidate_common" && pwd -P)" = "$(cd "$repo_root" && cd "$repo_common" && pwd -P)" ]
+}
+
+base_branch="${BASE_BRANCH:-}"
+branch_name=""
+worktree_root="${WORKTREE_ROOT:-}"
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -b|--base-branch)
+      [ "$#" -ge 2 ] || die "$1 requires a value"
+      [ -n "$2" ] || die "$1 requires a non-empty value"
+      base_branch="$2"
+      shift 2
+      ;;
+    --base-branch=*)
+      base_branch="${1#*=}"
+      [ -n "$base_branch" ] || die '--base-branch requires a non-empty value'
+      shift
+      ;;
+    -r|--worktree-root)
+      [ "$#" -ge 2 ] || die "$1 requires a value"
+      [ -n "$2" ] || die "$1 requires a non-empty value"
+      worktree_root="$2"
+      shift 2
+      ;;
+    --worktree-root=*)
+      worktree_root="${1#*=}"
+      [ -n "$worktree_root" ] || die '--worktree-root requires a non-empty value'
+      shift
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      break
+      ;;
+    -*)
+      die "unknown option: $1"
+      ;;
+    *)
+      [ -z "$branch_name" ] || die "unexpected extra argument: $1"
+      branch_name="$1"
+      shift
+      ;;
+  esac
+done
+
+while [ "$#" -gt 0 ]; do
+  [ -z "$branch_name" ] || die "unexpected extra argument: $1"
+  branch_name="$1"
+  shift
+done
+
+if [ -z "$branch_name" ]; then
+  usage
+  exit 2
+fi
+
+case "$branch_name" in
+  ''|'.'|'..'|-*|*'//'*|*/)
+    die "invalid branch/worktree name: $branch_name"
+    ;;
+  /*|~*|*'/../'*|../*|*'/..')
+    die "branch/worktree name must be relative and stay under the worktree root: $branch_name"
+    ;;
+esac
+
+have_cmd git || die 'git was not found in PATH'
+repo_root="$(git rev-parse --show-toplevel 2>/dev/null)" || die 'not inside a git repository'
+have_cmd opencode || die 'opencode was not found in PATH'
+
+repo_name="$(basename "$repo_root")"
+if [ -z "$base_branch" ]; then
+  base_branch="$(git -C "$repo_root" symbolic-ref --quiet --short HEAD 2>/dev/null)" || die 'not on a branch; set BASE_BRANCH to choose a base branch'
+fi
+case "$base_branch" in
+  ''|'.'|'..'|-*|*'//'*|*/|*:*|+*)
+    die "invalid base branch: $base_branch"
+    ;;
+  /*|~*|*'/../'*|../*|*'/..')
+    die "base branch must be a branch name, not a path: $base_branch"
+    ;;
+esac
+if [ -z "$worktree_root" ]; then
+  worktree_root="$HOME/worktrees/$repo_name"
+fi
+worktree_path="$worktree_root/$branch_name"
+
+mkdir -p "$(dirname "$worktree_path")"
+worktree_path="$(cd "$(dirname "$worktree_path")" && pwd -P)/$(basename "$worktree_path")"
+
+git -C "$repo_root" check-ref-format "refs/heads/$branch_name" >/dev/null 2>&1 || die "invalid branch name: $branch_name"
+git -C "$repo_root" check-ref-format "refs/heads/$base_branch" >/dev/null 2>&1 || die "invalid base branch: $base_branch"
+
+if [ -e "$worktree_path" ]; then
+  [ -d "$worktree_path" ] || die "path exists and is not a directory: $worktree_path"
+  is_worktree_for_repo "$worktree_path" || die "path exists but is not a worktree for this repo: $worktree_path"
+else
+  git -C "$repo_root" fetch origin "refs/heads/$base_branch:refs/remotes/origin/$base_branch" >/dev/null 2>&1 || true
+
+  if git -C "$repo_root" show-ref --verify --quiet "refs/heads/$branch_name"; then
+    git -C "$repo_root" worktree add "$worktree_path" "$branch_name"
+  elif git -C "$repo_root" show-ref --verify --quiet "refs/remotes/origin/$branch_name"; then
+    git -C "$repo_root" worktree add -b "$branch_name" "$worktree_path" "origin/$branch_name"
+  elif git -C "$repo_root" show-ref --verify --quiet "refs/remotes/origin/$base_branch"; then
+    git -C "$repo_root" worktree add -b "$branch_name" "$worktree_path" "origin/$base_branch"
+  else
+    git -C "$repo_root" worktree add -b "$branch_name" "$worktree_path" "$base_branch"
+  fi
+fi
+
+exec opencode "$worktree_path"

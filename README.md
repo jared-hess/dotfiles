@@ -16,7 +16,7 @@ Set `RUN_OH_MY_ZSH_INSTALLER=0` to skip running the Oh My Zsh installer.
 Set `RUN_STARSHIP_INSTALLER=0` to skip installing Starship during bootstrap.
 Set `BACKUP_EXISTING_DOTFILES=0` to skip creating bootstrap backups.
 
-`apply -R` refreshes externals (for example `~/.oh-my-zsh`, optional work overlays, and optional opencode repos).
+Pass `-R` to `apply` when you want to refresh externals (for example `~/.oh-my-zsh`, optional work overlays, and optional opencode repos).
 
 ## Daily usage
 
@@ -26,6 +26,12 @@ Set `BACKUP_EXISTING_DOTFILES=0` to skip creating bootstrap backups.
 ./script/chezmoi update
 ./script/chezmoi edit ~/.zshrc
 ```
+
+Managed commands are installed into `~/.local/bin`, including `ocw <branch-name>`
+for opening OpenCode in a dedicated git worktree. New worktrees default to
+`~/worktrees/<repo-name>/<branch-name>` and branch from the current branch;
+use `--base-branch` or `--worktree-root` to override either default. `BASE_BRANCH`
+and `WORKTREE_ROOT` are also supported as environment fallbacks.
 
 ## Source layout
 
