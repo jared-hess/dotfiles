@@ -13,7 +13,10 @@ if not uv.fs_stat(lazypath) then
   })
 end
 
-if uv.fs_stat(lazypath) then
+local nvim_version = vim.version()
+local supports_lazy = nvim_version.major > 0 or nvim_version.minor >= 8
+
+if supports_lazy and uv.fs_stat(lazypath) then
   opt.rtp:prepend(lazypath)
   local ok, lazy = pcall(require, "lazy")
   if ok then
@@ -54,7 +57,7 @@ vim.fn.mkdir(undodir, "p")
 
 opt.background = "dark"
 opt.termguicolors = true
-vim.cmd("colorscheme habamax")
+pcall(vim.cmd, "colorscheme habamax")
 
 vim.keymap.set("", "<C-ScrollWheelUp>", "u")
 vim.keymap.set("", "<C-ScrollWheelDown>", "<C-r>")

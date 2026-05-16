@@ -19,6 +19,7 @@ chezmoi apply
 - `dot_config/shell/path.sh` is sourced by both shells for shared PATH setup
 - `dot_config/shell/env.sh` is sourced from shell env fragments for shared environment variables
 - `dot_config/shell/aliases.sh` is sourced from shell alias fragments for shared aliases/functions (including conditional `vim`/`vi` -> `nvim`)
+- `dot_config/starship.toml` defines the shared Starship prompt config
 
 ## Private Work Overlay
 

@@ -8,11 +8,12 @@ This repo is managed with `chezmoi`.
 ./script/chezmoi bootstrap
 ```
 
-The wrapper prefers package managers (`brew`, `apt`, `pacman`, `dnf`, `zypper`, `apk`) and falls back to the official chezmoi install script. It also runs the official unattended Oh My Zsh install script when `~/.oh-my-zsh` is missing.
+The wrapper prefers package managers (`brew`, `apt`, `pacman`, `dnf`, `zypper`, `apk`) and falls back to official install scripts. It bootstraps `chezmoi`, installs `starship`, and runs the official unattended Oh My Zsh install script when `~/.oh-my-zsh` is missing.
 
 Before first apply during bootstrap, existing managed target files are backed up to `~/.chezmoi-backup/<timestamp>/`.
 
 Set `RUN_OH_MY_ZSH_INSTALLER=0` to skip running the Oh My Zsh installer.
+Set `RUN_STARSHIP_INSTALLER=0` to skip installing Starship during bootstrap.
 Set `BACKUP_EXISTING_DOTFILES=0` to skip creating bootstrap backups.
 
 `apply -R` refreshes externals (for example `~/.oh-my-zsh`, optional work overlays, and optional opencode repos).
