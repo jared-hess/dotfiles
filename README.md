@@ -27,6 +27,11 @@ Set `BACKUP_EXISTING_DOTFILES=0` to skip creating bootstrap backups.
 ./script/chezmoi edit ~/.zshrc
 ```
 
+## Shell helpers
+
+If you use the included zsh configuration, you also get the Codex-powered shell helpers.
+See `chezmoi/README.md` for usage, examples, and safety behavior of `cxp`, `??`, `wtf`, Alt-C, and Alt-E.
+
 ## Source layout
 
 - `chezmoi/` is the active chezmoi source state for this repo.

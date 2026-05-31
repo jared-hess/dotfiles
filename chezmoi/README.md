@@ -21,6 +21,81 @@ chezmoi apply
 - `dot_config/shell/aliases.sh` is sourced from shell alias fragments for shared aliases/functions (including conditional `vim`/`vi` -> `nvim`)
 - `dot_config/starship.toml` defines the shared Starship prompt config
 
+## Codex shell helpers (Zsh)
+
+These helpers are in the Zsh fragment `chezmoi/dot_zshrc.d/65-codex.zsh` and are available once this dotfiles set is sourced in Zsh.
+
+### Prerequisites
+
+- `zsh`
+- Codex CLI installed and available on PATH
+- Authenticated with `codex login` for AI-powered features
+- `ShellSpec`, only for local `./script/test-shell` verification
+
+If `ShellSpec` is missing, `./script/test-shell` prints:
+
+```text
+script/test-shell: shellspec not found. Install ShellSpec and retry.
+```
+
+### Usage
+
+- `cxp` sends the current input into Codex for review or transformation.
+
+```bash
+git diff | cxp 'review this diff'
+```
+
+- `??` uses your current text prompt to rewrite the current command line.
+
+```bash
+?? find all files over 100MB under this repo
+```
+
+`??` requires two Enter steps. The first Enter transforms the buffer to a proposed command; it does not run it. Review the new line, then press Enter again to execute.
+
+- `wtf` explains a command before you run it.
+
+```bash
+wtf 'find . -type f -name "*.pyc" -delete'
+```
+
+### Output behavior
+
+Default helper output is quiet on success. On a successful `codex` call, only the final assistant response is printed.
+This suppresses Codex CLI ceremony, such as startup banners, warnings, and token summaries.
+
+For raw streaming output and full Codex noise, set:
+
+```bash
+CODEX_SHELL_VERBOSE=1
+```
+
+while running your helper command.
+
+### Keybindings
+
+- `Alt-C` transforms the current buffer with Codex while preserving your current command context.
+- `Alt-E` explains the current buffer command in-place and preserves the current buffer.
+
+### Safety model
+
+These helpers use your existing Codex authentication from `codex login`. No API key setup is required.
+
+- No token, auth-file, or credential handling is added by the shell helpers.
+- All generated commands are reviewed by default and **not** auto-run.
+- All Codex invocations are sent through:
+
+```text
+codex exec --color never --sandbox read-only --ephemeral --skip-git-repo-check --output-last-message <tmpfile> -
+```
+
+This keeps command generation in a read-only sandbox and keeps default output concise.
+
+Enable `CODEX_SHELL_VERBOSE=1` to bypass quiet capture and use raw
+`codex exec --sandbox read-only --ephemeral --skip-git-repo-check -` output
+for debugging.
+
 ## Private Work Overlay
 
 Defaults are in `.chezmoidata.yaml` and can be overridden locally in `~/.config/chezmoi/chezmoi.toml`.
