@@ -1,9 +1,49 @@
-# Codex shell helper foundation
+# Codex shell helper integration for interactive command transformation and explanation.
+#
+# Public entrypoints:
+# - `cxp`: reads piped input, builds a structured prompt, and submits it to
+#   Codex.
+# - `wtf`: explains a command passed as arguments through Codex.
+#
+# Private helpers:
+# - `_cx_*` functions are internal utilities for prompt assembly, wrapping
+#   Codex execution, normalizing output, and backing zle-widget driven
+#   transformations.
+#
+# Interactive affordances:
+# - `?? <request>` on enter: transforms the request into a single command.
+# - Alt-C (`^[c` / `^[C`): transforms the entire current line.
+# - Alt-E (`^[e` / `^[E`): explains the current buffer in place.
+#
+# Execution behavior preserved:
+# - all Codex calls remain read-only, ephemeral, and skip git-repo checks as
+#   currently configured.
+# - quiet mode uses `--output-last-message`; verbose mode
+#   (`CODEX_SHELL_VERBOSE=1`) streams Codex output directly.
+# - no automatic command execution is introduced here.
 
+# Check whether the `codex` executable is available in PATH.
+#
+# Inputs: none.
+# Outputs: status 0 if command exists, 1 otherwise.
 _cx_have_codex() {
   command -v codex >/dev/null 2>&1
 }
 
+# Execute a prepared prompt via `codex exec`, preserving current invocation
+# semantics.
+#
+# Inputs:
+# - positional parameters joined as one prompt string.
+# Outputs:
+# - prints Codex final message text.
+# Side effects:
+# - writes temporary sandbox interaction artifacts in a temp directory.
+# Failure modes:
+# - returns non-zero if Codex is missing, command fails, or final message file
+#   is empty.
+# Safety behavior:
+# - always cleans up temp files/directories in `always` cleanup block.
 _cx_exec() {
   local prompt="${*}"
   local tmp_dir=""
@@ -53,6 +93,18 @@ _cx_exec() {
   }
 }
 
+# Build a structured stdin-driven review prompt and submit it via `_cx_exec`.
+#
+# Inputs:
+# - optional task text (`$*`), defaults to "analyze this input".
+# - requires piped stdin content.
+# Outputs:
+# - sends the composed prompt to `_cx_exec` and returns its status.
+# Failure modes:
+# - returns 1 when run without piped stdin, when stdin is empty, or when
+#   `_cx_exec` fails.
+# Safety:
+# - explicitly marks piped content as untrusted input and disallows execution.
 cxp() {
   local task="${*}"
   if [[ -z "$task" ]]; then
@@ -93,6 +145,13 @@ cxp() {
   _cx_exec "$prompt"
 }
 
+
+# Trim leading and trailing whitespace from a single string value.
+#
+# Inputs:
+# - string payload `${1-}`.
+# Outputs:
+# - prints the trimmed payload.
 _cx_trim_codex_output() {
   local output="${1-}"
   output="${output#${output%%[![:space:]]*}}"
@@ -101,6 +160,18 @@ _cx_trim_codex_output() {
   print -r -- "$output"
 }
 
+
+# Build a strict single-command conversion prompt for a natural-language request.
+#
+# Inputs:
+# - raw request text `${1-}`.
+# Outputs:
+# - prints a prompt that instructs Codex to return exactly one zsh command.
+# Context captured in prompt:
+# - shell type, cwd, detected OS, and git repository root when available.
+# Safety constraints preserved:
+# - never execute commands, avoid destructive commands where feasible, avoid
+#   shell config edits unless requested.
 _cx_nl_to_command_prompt() {
   local request="${1-}"
   local os="unknown"
@@ -140,6 +211,14 @@ _cx_nl_to_command_prompt() {
   print -r -- "$prompt"
 }
 
+# Normalize Codex text into one executable line suitable for BUFFER.
+#
+# Inputs:
+# - raw multi-line Codex output `${1-}`.
+# Outputs:
+# - prints first non-empty, non-fence line after whitespace and CR cleanup.
+# Failure modes:
+# - returns 1 when no valid command-looking line is found.
 _cx_clean_command_output() {
   local output="${1-}"
   local line=""
@@ -167,6 +246,19 @@ _cx_clean_command_output() {
   return 1
 }
 
+
+# Transform a natural-language request into a single command and apply it to the
+# current zsh editing state.
+#
+# Inputs:
+# - user request text `${1-}`.
+# Outputs:
+# - sets `BUFFER` to the extracted command and updates `CURSOR`.
+# Side effects:
+# - drives `_cx_nl_to_command_prompt`, `_cx_exec`, and
+#   `_cx_clean_command_output`.
+# Failure modes:
+# - returns 1 when request/prompt/extraction fails or command is empty.
 _cx_transform_buffer_to_command() {
   local user_request="${1-}"
   local prompt=""
@@ -194,6 +286,13 @@ _cx_transform_buffer_to_command() {
   CURSOR=${#BUFFER}
 }
 
+# Handle `accept-line` with a `?? ` transformation shortcut.
+#
+# Inputs:
+# - reads current `BUFFER`.
+# Outputs/behavior:
+# - if `BUFFER` begins `?? `, transforms suffix to a command.
+# - otherwise delegates to default `zle .accept-line` behavior.
 _cx_accept_line() {
   if [[ "$BUFFER" == '?? '* ]]; then
     _cx_transform_buffer_to_command "${BUFFER#\?\? }"
@@ -203,10 +302,26 @@ _cx_accept_line() {
   zle .accept-line
 }
 
+
+# Transform the full current buffer on-demand via Alt-C.
+#
+# Inputs:
+# - reads current `BUFFER`.
+# Outputs:
+# - updates `BUFFER`/`CURSOR` via `_cx_transform_buffer_to_command`.
 _cx_alt_c_transform_buffer() {
   _cx_transform_buffer_to_command "$BUFFER"
 }
 
+
+# Construct a conservative Codex explanation prompt for a command.
+#
+# Inputs:
+# - command text `${1-}`.
+# Outputs:
+# - prints an explanation-oriented prompt with explicit non-execution scope.
+# Safety semantics:
+# - requests risky behavior and scope details and requests safer preview variants.
 _cx_wtf_prompt() {
   local command_to_explain="${1-}"
   local prompt=""
@@ -225,6 +340,14 @@ _cx_wtf_prompt() {
   print -r -- "$prompt"
 }
 
+# Public `wtf` entrypoint for command explanation.
+#
+# Inputs:
+# - user-provided command text `${*}`.
+# Outputs:
+# - prompts Codex and returns `_cx_exec` status.
+# Failure modes:
+# - returns 1 when no command is supplied.
 wtf() {
   local command_to_explain="${*}"
 
@@ -238,6 +361,16 @@ wtf() {
   _cx_exec "$prompt"
 }
 
+
+# Widget path to explain current buffer contents without mutation.
+#
+# Inputs:
+# - uses current `BUFFER` and `CURSOR` (captured and restored).
+# Outputs:
+# - prints explanation via `_cx_exec` and returns invocation result.
+# Side effects:
+# - optionally triggers `zle -I` and `zle redisplay` when called as widget.
+# - preserves editing state for caller safety.
 _cx_alt_e_wtf() {
   local original_buffer="$BUFFER"
   local original_cursor="$CURSOR"
@@ -276,6 +409,16 @@ _cx_alt_e_wtf() {
   return "$result"
 }
 
+# Register interactive zsh widgets and keybindings.
+#
+# Condition:
+# - only runs when shell input mode is interactive (`[[ -o interactive ]]`).
+# Purpose:
+# - bind widget names for `accept-line`, `_cx_alt_c_transform_buffer`, and
+#   `_cx_alt_e_wtf`.
+# Keybinding mapping:
+# - Alt-C / Alt-Shift-C → `_cx_alt_c_transform_buffer`.
+# - Alt-E / Alt-Shift-E → `_cx_alt_e_wtf`.
 if [[ -o interactive ]]; then
   zle -N accept-line _cx_accept_line
   zle -N _cx_alt_c_transform_buffer
