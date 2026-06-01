@@ -96,6 +96,63 @@ Enable `CODEX_SHELL_VERBOSE=1` to bypass quiet capture and use raw
 `codex exec --sandbox read-only --ephemeral --skip-git-repo-check -` output
 for debugging.
 
+## Git worktree helpers (Zsh)
+
+These helpers are in the Zsh fragment `chezmoi/dot_zshrc.d/66-git-worktree.zsh` and are available once this dotfiles set is sourced in Zsh.
+
+### Prerequisites
+
+- `zsh`
+- `git` with worktree support
+
+### Loading
+
+The `66-git-worktree.zsh` file is installed as `~/.zshrc.d/66-git-worktree.zsh` and loaded from your Zsh startup flow via `~/.zshrc.d/*.zsh` after `chezmoi apply`.
+
+### Commands
+
+- `gwtw <branch> [base]` creates and switches to a worktree for `<branch>`.
+- `gwtcd [query]` switches to a matching managed worktree.
+- `gwtl` lists managed worktrees for the current repository.
+- `gwtrm <branch-or-path>` removes a matching managed worktree.
+
+### Layout and configuration
+
+By default, worktrees are placed under:
+
+```text
+${GWT_ROOT:-$HOME/worktrees}/${repo-slug}/${branch-slug}
+```
+
+You can override behavior with these environment variables:
+
+- `GWT_ROOT`: base directory for all managed worktrees. The plan default is `~/worktrees`.
+- `GWT_REPO_SLUG`: optional slug override when repo names would collide.
+
+### Branch behavior
+
+- Existing local branches are reused.
+- If `<branch>` does not exist locally and `origin/<branch>` exists, `gwtw` creates a local tracking branch and then creates the worktree.
+- If no local or remote branch matches, a new branch is created from `[base]` when provided.
+- If `[base]` is omitted, a new branch is created from the current `HEAD`.
+
+### Safety behavior
+
+- No destructive git operations are advertised for these helpers.
+- Existing managed paths are not overwritten.
+- Removal does not force delete paths.
+- A dirty source tree is allowed when switching or creating worktrees, and the dirty state is preserved.
+
+### Examples
+
+```bash
+gwtw feature/demo
+gwtw bugfix origin/main
+gwtcd feature/demo
+gwtl
+gwtrm feature/demo
+```
+
 ## Private Work Overlay
 
 Defaults are in `.chezmoidata.yaml` and can be overridden locally in `~/.config/chezmoi/chezmoi.toml`.
