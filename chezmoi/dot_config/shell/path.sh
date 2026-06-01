@@ -17,6 +17,7 @@ path_append() {
 }
 
 path_prepend "$HOME/bin"
+path_prepend "$HOME/.npm-global/bin"
 path_prepend "$HOME/.opencode/bin"
 path_append "$HOME/.local/bin"
 path_append "/usr/local/bin"
