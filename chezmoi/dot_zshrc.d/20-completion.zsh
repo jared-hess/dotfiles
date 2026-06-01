@@ -14,3 +14,9 @@ if command -v aws_completer >/dev/null 2>&1; then
   complete -C "$(command -v aws_completer)" aws
   complete -C "$(command -v aws_completer)" awslocal
 fi
+
+openclaw_zsh_completion="$HOME/.openclaw/completions/openclaw.zsh"
+if [[ -r "$openclaw_zsh_completion" ]]; then
+  # shellcheck source=/dev/null
+  source "$openclaw_zsh_completion"
+fi

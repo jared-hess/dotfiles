@@ -19,3 +19,9 @@ fi
 if command -v thefuck >/dev/null 2>&1; then
   eval "$(thefuck --alias)"
 fi
+
+openclaw_completion="$HOME/.openclaw/completions/openclaw.bash"
+if [[ -r "$openclaw_completion" ]]; then
+  # shellcheck source=/dev/null
+  source "$openclaw_completion"
+fi

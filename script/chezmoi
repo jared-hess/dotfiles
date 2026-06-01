@@ -187,6 +187,20 @@ ensure_starship() {
   have_cmd starship || die "starship install failed"
 }
 
+ensure_openclaw_completions() {
+  if ! have_cmd openclaw; then
+    return 0
+  fi
+
+  if ! openclaw completion --shell bash --write-state; then
+    warn "Failed to generate OpenClaw bash completion state"
+  fi
+
+  if ! openclaw completion --shell zsh --write-state; then
+    warn "Failed to generate OpenClaw zsh completion state"
+  fi
+}
+
 install_oh_my_zsh_with_official_script() {
   local installer_url="https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 
@@ -274,6 +288,7 @@ cmd_bootstrap() {
 
   log "Applying dotfiles (refreshing externals)"
   chezmoi_cmd apply -R
+  ensure_openclaw_completions
 }
 
 cmd_diff() {
@@ -284,6 +299,7 @@ cmd_diff() {
 cmd_apply() {
   ensure_chezmoi
   chezmoi_cmd apply -R "$@"
+  ensure_openclaw_completions
 }
 
 cmd_update() {
