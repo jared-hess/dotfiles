@@ -116,6 +116,8 @@ The `66-git-worktree.zsh` file is installed as `~/.zshrc.d/66-git-worktree.zsh` 
 - `gwtl` lists managed worktrees for the current repository.
 - `gwtrm <branch-or-path>` removes a matching managed worktree.
 
+Each command supports `-h` and `--help` for usage, behavior, and examples.
+
 ### Layout and configuration
 
 By default, worktrees are placed under:
