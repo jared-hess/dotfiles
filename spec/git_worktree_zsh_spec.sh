@@ -37,6 +37,26 @@ Describe 'git worktree shell helpers'
     source_module
   }
 
+  gwtw_prints_help() {
+    source_module
+    gwtw --help
+  }
+
+  gwtcd_prints_help() {
+    source_module
+    gwtcd -h
+  }
+
+  gwtl_prints_help() {
+    source_module
+    gwtl --help
+  }
+
+  gwtrm_prints_help() {
+    source_module
+    gwtrm -h
+  }
+
   branch_slug_different_when_colliding_chars() {
     source_module
     local feature_slash
@@ -644,6 +664,34 @@ Describe 'git worktree shell helpers'
     The stdout should include '_gwt_complete_gwtw gwtw'
     The stdout should include '_gwt_complete_managed_worktree gwtcd gwtrm'
     The stdout should include '_gwt_complete_no_args gwtl'
+  End
+
+  It 'prints gwtw help'
+    When run gwtw_prints_help
+    The status should be success
+    The stdout should include 'Usage: gwtw <branch> [base]'
+    The stdout should include 'gwtw feature/demo origin/main'
+  End
+
+  It 'prints gwtcd help'
+    When run gwtcd_prints_help
+    The status should be success
+    The stdout should include 'Usage: gwtcd [query]'
+    The stdout should include 'Exact branch name first'
+  End
+
+  It 'prints gwtl help'
+    When run gwtl_prints_help
+    The status should be success
+    The stdout should include 'Usage: gwtl'
+    The stdout should include '<branch><TAB><path>'
+  End
+
+  It 'prints gwtrm help'
+    When run gwtrm_prints_help
+    The status should be success
+    The stdout should include 'Usage: gwtrm <branch-or-path>'
+    The stdout should include 'Uses git worktree remove without --force'
   End
 
   It 'generates distinct branch slugs for similar branch names'

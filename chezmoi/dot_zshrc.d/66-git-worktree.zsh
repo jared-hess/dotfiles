@@ -301,6 +301,76 @@ _gwt_resolve_managed_worktree() {
   return 1
 }
 
+_gwt_help() {
+  case "${1-}" in
+    gwtw)
+      cat <<'EOF'
+Usage: gwtw <branch> [base]
+
+Create or switch to a managed worktree for <branch>, then cd into it.
+
+Branch behavior:
+  - Existing registered worktree: cd to it.
+  - Existing local branch: create a worktree for it.
+  - Existing origin/<branch>: create a local tracking branch when [base] is omitted.
+  - New branch: create from [base], or from current HEAD when [base] is omitted.
+
+Examples:
+  gwtw feature/demo
+  gwtw feature/demo origin/main
+EOF
+      ;;
+    gwtcd)
+      cat <<'EOF'
+Usage: gwtcd [query]
+
+Cd into a managed worktree for the current repository.
+
+Query matching:
+  - Exact branch name first.
+  - Exact path second.
+  - Unique substring of branch or path last.
+  - With no query, cd only if exactly one managed worktree exists.
+
+Examples:
+  gwtcd feature/demo
+  gwtcd demo
+  gwtcd /path/to/worktree
+EOF
+      ;;
+    gwtl)
+      cat <<'EOF'
+Usage: gwtl
+
+List managed branch worktrees for the current repository.
+
+Output format:
+  <branch><TAB><path>
+EOF
+      ;;
+    gwtrm)
+      cat <<'EOF'
+Usage: gwtrm <branch-or-path>
+
+Remove a managed worktree for the current repository.
+
+Safety behavior:
+  - Refuses unmanaged paths.
+  - Refuses to remove the current worktree.
+  - Uses git worktree remove without --force.
+
+Examples:
+  gwtrm feature/demo
+  gwtrm /path/to/worktree
+EOF
+      ;;
+    *)
+      _gwt_err "unknown help topic: ${1-}"
+      return 1
+      ;;
+  esac
+}
+
 unalias gwtw gwtcd gwtl gwtrm 2>/dev/null || true
 
 gwtw() {
@@ -316,6 +386,11 @@ gwtw() {
   local registered_path=""
   local current_path=""
   local current_branch=""
+
+  if [[ "$branch" == "--help" || "$branch" == "-h" ]]; then
+    _gwt_help gwtw
+    return 0
+  fi
 
   if [[ -z "$branch" ]]; then
     _gwt_err "usage: gwtw <branch> [base]"
@@ -415,6 +490,11 @@ gwtcd() {
   local query="${1-}"
   local target=""
 
+  if [[ "$query" == "--help" || "$query" == "-h" ]]; then
+    _gwt_help gwtcd
+    return 0
+  fi
+
   if ! target="$(_gwt_resolve_managed_worktree "$query")"; then
     return 1
   fi
@@ -426,6 +506,11 @@ gwtcd() {
 }
 
 gwtl() {
+  if [[ "${1-}" == "--help" || "${1-}" == "-h" ]]; then
+    _gwt_help gwtl
+    return 0
+  fi
+
   _gwt_managed_worktree_rows
 }
 
@@ -433,6 +518,11 @@ gwtrm() {
   local query="${1-}"
   local target=""
   local repo_root=""
+
+  if [[ "$query" == "--help" || "$query" == "-h" ]]; then
+    _gwt_help gwtrm
+    return 0
+  fi
 
   if [[ -z "$query" ]]; then
     _gwt_err "usage: gwtrm <branch-or-path>"
