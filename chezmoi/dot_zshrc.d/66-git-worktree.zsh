@@ -59,13 +59,13 @@ _gwt_repo_slug() {
     if ! repo_common_dir="$(git -C "$repo_root" rev-parse --git-common-dir 2>/dev/null)"; then
       repo_slug="${repo_root:t}"
     else
-      if [[ "$repo_common_dir" = "/*" ]]; then
+      if [[ "$repo_common_dir" = /* ]]; then
         repo_common_abs="$repo_common_dir"
       else
         repo_common_abs="$repo_root/$repo_common_dir"
       fi
 
-      if [[ "$repo_common_abs" == *"/.git/worktrees/*" ]]; then
+      if [[ "$repo_common_abs" == */.git/worktrees/* ]]; then
         repo_common_abs="${repo_common_abs%/.git/worktrees/*}"
       fi
 

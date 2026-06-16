@@ -95,6 +95,70 @@ Describe 'git worktree shell helpers'
     [[ "$repo_slug" != */* && "$branch_slug" != */* ]]
   }
 
+  repo_slug_uses_relative_common_dir_from_repo_root() {
+    source_module
+    local tmp
+    local repo
+    local expected
+    local actual
+
+    tmp="$(mktemp -d)"
+    repo="$tmp/repo"
+    init_git_repo "$repo"
+
+    cd "$repo" || return 1
+    expected="repo"
+    actual="$(_gwt_repo_slug)"
+
+    [[ "$actual" == "$expected" ]]
+  }
+
+  repo_slug_uses_absolute_common_dir_from_linked_worktree() {
+    source_module
+    local tmp
+    local repo
+    local linked
+    local expected
+    local actual
+
+    tmp="$(mktemp -d)"
+    repo="$tmp/main repo"
+    init_git_repo "$repo"
+    linked="$tmp/linked checkout"
+
+    git -C "$repo" worktree add --detach "$linked" || return 1
+    cd "$linked" || return 1
+    expected="main-repo"
+    actual="$(_gwt_repo_slug)"
+
+    [[ "$actual" == "$expected" ]]
+  }
+
+  repo_slug_strips_mocked_worktree_common_dir() {
+    source_module
+    local expected
+    local actual
+
+    git() {
+      if [[ "$*" == "rev-parse --show-toplevel" ]]; then
+        print -r -- "/tmp/linked checkout"
+      elif [[ "$*" == "-C /tmp/linked checkout rev-parse --git-common-dir" ]]; then
+        print -r -- "/tmp/main repo/.git/worktrees/linked-checkout"
+      else
+        command git "$@"
+      fi
+    }
+
+    git rev-parse --show-toplevel >/dev/null
+
+    expected="main-repo"
+    actual="$(_gwt_repo_slug)"
+
+    unfunction git
+
+    [[ "$actual" == "$expected" ]]
+  }
+
   root_override_uses_exact_configured_root() {
     source_module
     local tmp
@@ -706,6 +770,21 @@ Describe 'git worktree shell helpers'
 
   It 'removes path separators from repo and branch slugs'
     When run slugs_do_not_contain_path_separators
+    The status should be success
+  End
+
+  It 'uses relative common-dir from repo root for repo slug'
+    When run repo_slug_uses_relative_common_dir_from_repo_root
+    The status should be success
+  End
+
+  It 'uses absolute common-dir from linked worktree for repo slug'
+    When run repo_slug_uses_absolute_common_dir_from_linked_worktree
+    The status should be success
+  End
+
+  It 'strips linked-worktree common-dir in repo slug helper'
+    When run repo_slug_strips_mocked_worktree_common_dir
     The status should be success
   End
 
