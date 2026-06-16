@@ -128,7 +128,7 @@ ${GWT_ROOT:-$HOME/worktrees}/${repo-slug}/${branch-slug}
 
 You can override behavior with these environment variables:
 
-- `GWT_ROOT`: base directory for all managed worktrees. The plan default is `~/worktrees`.
+- `GWT_ROOT`: base directory for all managed worktrees. The default is `~/worktrees`.
 - `GWT_REPO_SLUG`: optional slug override when repo names would collide.
 
 ### Branch behavior

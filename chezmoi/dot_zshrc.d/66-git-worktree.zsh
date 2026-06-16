@@ -2,7 +2,7 @@
 #
 # Public entrypoints:
 # - `gwtw <branch> [base]`: create or attach a managed worktree for a branch.
-# - `gwtcd <query>`: change shell into an existing managed worktree.
+# - `gwtcd [query]`: change shell into an existing managed worktree.
 # - `gwtl`: list managed worktrees.
 # - `gwtrm <branch-or-path>`: remove a managed worktree.
 #
