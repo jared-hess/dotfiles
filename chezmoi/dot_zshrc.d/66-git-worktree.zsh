@@ -469,8 +469,12 @@ gwtw() {
       return 1
     fi
   elif git -C "$repo_root" show-ref --verify --quiet "refs/remotes/origin/$branch"; then
-    if ! git -C "$repo_root" worktree add -b "$branch" --track "$target_path" "origin/$branch"; then
+    if ! git -C "$repo_root" worktree add -b "$branch" "$target_path" "origin/$branch"; then
       _gwt_err "failed to add tracking worktree for 'origin/$branch'"
+      return 1
+    fi
+    if ! git -C "$target_path" branch --set-upstream-to="origin/$branch" "$branch"; then
+      _gwt_err "failed to set upstream for '$branch' to 'origin/$branch'"
       return 1
     fi
   else
