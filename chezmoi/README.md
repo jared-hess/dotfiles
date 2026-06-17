@@ -140,7 +140,8 @@ You can override behavior with these environment variables:
 
 ### Safety behavior
 
-- No destructive git operations are advertised for these helpers.
+- `gwtrm` removes managed worktrees, but it does not pass `--force`.
+- The helpers do not rewrite history or delete branches.
 - Existing managed paths are not overwritten.
 - Removal does not force delete paths.
 - A dirty source tree is allowed when switching or creating worktrees, and the dirty state is preserved.
